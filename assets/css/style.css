@@ -1,0 +1,27 @@
+header {
+    background-color: #d58512;
+    color: white;
+    text-align: center;
+}
+
+.footer {
+    background: #999999;
+    text-align: center;
+    padding: 10px;
+    /*margin-top: 5px;*/
+    /*border-top: thick solid #6ea3da;*/
+    font-family: 'Arial', 'Helvetica Neue', Helvetica, sans-serif;
+    color: white;
+    font-size: x-small;
+    /*z-index: -1;*/
+}
+
+.footer:after {
+    content: "\00a9 Copyright 2017 Curtis Lytle";
+}
+
+.clearfix::after {
+    content: "";
+    display: block;
+    clear: both;
+}
