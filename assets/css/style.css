@@ -4,6 +4,37 @@ header {
     text-align: center;
 }
 
+body {
+    background-color: #d6e9c6;
+}
+
+.toprow {
+    margin: 10px;
+}
+
+#playerNameText {
+    width: 400px;
+    float: left;
+}
+
+#chatDiv {
+    width: 600px;
+    height: 200px;
+    margin: 5px;
+    background-color: white;
+}
+#chatText {
+    width: 500px;
+    float: left;
+}
+
+.gamebox {
+    border: 1px solid green ;
+    width: 300px;
+    height: 300px;
+    margin: 5px;
+}
+
 .footer {
     background: #999999;
     text-align: center;

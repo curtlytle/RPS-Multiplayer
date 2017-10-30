@@ -5,7 +5,9 @@
     <title>RPS</title>
     <link rel="stylesheet" href="assets/css/bootstrap-3.3.7-dist/css/bootstrap.css">
     <link rel="stylesheet" href="assets/css/style.css">
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
     <!-- Firebase Reference -->
     <script src="https://www.gstatic.com/firebasejs/3.7.1/firebase.js"></script>
 </head>
@@ -16,20 +18,43 @@
 
 <div class="container">
     <div class="row toprow">
-        <div class="col-md-12">
-            <div id="nameDiv">NameDiv</div>
+        <div class="col-md-2">
+            <div>&nbsp;</div>
+        </div>
+        <div class="col-md-10">
+            <form>
+                <div class="form-group">
+                    <input type="text" class="form-control" id="playerNameText" placeholder="Enter Your Name">
+                    <button type="submit" class="btn btn-primary" id="playerNameButton">Start</button>
+                </div>
+            </form>
         </div>
     </div>
 
     <div class="row middlerow">
-        <div class="col-md-12">
-            <div id="gameDiv">GameDiv</div>
+        <div class="col-md-4 gamebox">
+            <div id="box1">GameDiv</div>
+        </div>
+        <div class="col-md-4 gamebox">
+            <div id="box2">GameDiv</div>
+        </div>
+        <div class="col-md-4 gamebox">
+            <div id="box3">GameDiv</div>
         </div>
     </div>
 
     <div class="row bottomrow">
-        <div class="col-md-12">
+        <div class="col-md-1">
+            <div>&nbsp;</div>
+        </div>
+        <div class="col-md-11">
             <div id="chatDiv">ChatDiv</div>
+            <form>
+                <div class="form-group">
+                    <input type="text" class="form-control" id="chatText" placeholder="Say Something">
+                    <button type="submit" class="btn btn-primary" id="chatButton">Send</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
