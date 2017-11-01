@@ -9,11 +9,38 @@ var config = {
 firebase.initializeApp(config);
 
 var database = firebase.database();
-var dref = database.ref();
+var playerDB = database.ref("/players");
+var dref = database.ref("/turn");
+var chatDB = database.ref("/chat");
 
+var players = [];
+var turn = 1;
 
-dref.on("value", function (snapshot) {
+playerDB.on("value", function (snapshot) {
     var data = snapshot.val();
+    if (data != null) {
+        players = data;
+    }
+
+    if (players != null) {
+        if (players.length == 1) {
+            putPlayer1Name(players[0].name);
+        } else if (players.length == 2) {
+            putPlayer1Name(players[0].name);
+            putPlayer2Name(players[1].name);
+            dref.set(1);
+        }
+    }
+
+}, function (errorObject) {
+    console.log("The read failed: " + errorObject.code);
+});
+
+chatDB.on("value", function (snapshot) {
+    var data = snapshot.val();
+    if (data == null || data.chat == null) return;
+    console.log("chatdb: " + data);
+
 
 }, function (errorObject) {
     console.log("The read failed: " + errorObject.code);
@@ -51,14 +78,37 @@ function putTopMsg2(msg) {
     $("#topMsg2").text(msg);
 }
 
+function putMiddleMsg(msg) {
+    $("#box2").empty();
+    $("#box2").text(msg);
+}
+
+function putPlayer1Name(name) {
+    $("#box1_1").empty();
+    $("#box1_1").text(name);
+}
+
+function putPlayer2Name(name) {
+    $("#box3_1").empty();
+    $("#box3_1").text(name);
+}
+
 var cnt = 0;
+
+$("#playerNameButton").on("click", function () {
+    event.preventDefault();
+    var playerName = $("#playerNameText").val().trim();
+
+    setupPlayer(playerName);
+
+});
 
 $("#chatButton").on("click", function () {
     event.preventDefault();
     var chatMsg = $("#chatText").val().trim();
 
     var msgp = $("<p class='chatP'>").text(chatMsg);
-    console.log(msgp);
+    // console.log(msgp);
     $("#chatDiv").prepend(msgp);
 
     if (cnt === 0) {
@@ -74,18 +124,6 @@ function emptyChatDiv() {
     $("#chatDiv").empty();
 }
 
-function testInputPlayers() {
-    var list = [];
-    list.push(setupPlayer("Curt"));
-    list.push(setupPlayer("Mason"));
-
-    var players = {
-        players: list
-    };
-
-    dref.set(players);
-}
-
 function setupPlayer(name) {
     var player = {
         name: name,
@@ -93,7 +131,7 @@ function setupPlayer(name) {
         losses: 0
     };
 
-    return player;
-}
+    players.push(player);
 
-testInputPlayers();
+    playerDB.set(players);
+}

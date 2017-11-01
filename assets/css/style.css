@@ -24,6 +24,11 @@ body {
     padding: 5px;
 }
 
+#box2 {
+    font-size: 20px;
+    text-align: center;
+}
+
 .rps:hover {
     background-color: #008CBA;
     cursor: pointer;
