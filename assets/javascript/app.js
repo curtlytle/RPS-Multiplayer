@@ -36,6 +36,8 @@ playerDB.on("value", function (snapshot) {
 
     if (uid === 1 && cnt === 1) {
         storageType.setItem(storageKey, 0);  // was second player, now first
+        putTopMsg2(" ");
+        $("#box3_1").empty();
         uid = 0;
     }
 
