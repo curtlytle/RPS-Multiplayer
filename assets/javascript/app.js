@@ -15,7 +15,7 @@ var chatDB = database.ref("/chat");
 
 var players = [];
 var turn = 1;
-var myPlayer = null;
+var myPlayer = 0;
 
 
 playerDB.on("value", function (snapshot) {
@@ -48,9 +48,20 @@ chatDB.on("value", function (snapshot) {
 });
 
 dref.on("value", function (snapshot) {
-    var data = snapshot.val();
-    if (data == null) return;
-    console.log("turn: " + data);
+    var turn = snapshot.val();
+    if (turn == null) return;
+    console.log("turn: " + turn);
+    setupEmptyTopMsgsDiv();
+
+    if (turn === 1 && myPlayer === 0) {
+        putTopMsg2("It's your turn!");
+    } else if (turn === 2 && myPlayer === 0) {
+        putTopMsg2("Waiting for " + players[1].name + " to choose.");
+    } else if (turn === 1 && myPlayer === 1) {
+        putTopMsg2("Waiting for " + players[0].name + " to choose.");
+    } else if (turn === 2 && myPlayer === 1) {
+        putTopMsg2("It's your turn!");
+    }
 
 }, function (errorObject) {
     console.log("The read failed: " + errorObject.code);
@@ -137,12 +148,12 @@ function setupPlayer(name) {
     playerDB.set(players);
 
     if (players.length === 1) {
-        myPlayer = players[0];
+        myPlayer = 0;
         setupEmptyTopMsgsDiv();
-        putTopMsg1("You are player 1");
+        putTopMsg1("Hi " + myPlayer.name + "! You are player 1");
     } else if (players.length === 2) {
-        myPlayer = players[1];
+        myPlayer = 1;
         setupEmptyTopMsgsDiv();
-        putTopMsg1("You are player 2");
+        putTopMsg1("Hi " + myPlayer.name + "! You are player 2");
     }
 }
