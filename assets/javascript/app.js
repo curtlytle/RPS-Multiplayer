@@ -14,24 +14,43 @@ var dref = database.ref("/turn");
 var chatDB = database.ref("/chat");
 
 var players = [];
-var turn = 1;
-var myPlayer = 0;
+var turn = 0;
+var storageType = sessionStorage;
+var storageKey = "myRPSid";
 
 
 playerDB.on("value", function (snapshot) {
     var data = snapshot.val();
     if (data != null) {
         players = data;
+    } else {
+        return;  // no data, just return
+    }
+    var uid = storageType.getItem(storageKey);
+
+    var cnt = players.length;
+
+    if (uid == null) {
+
+    } else if (uid === 0) {
+
+    } else if (uid === 1) {
+        if (cnt === 2) {
+            storageType.setItem(storageKey, 0);  // was second player, now first
+        }
+
     }
 
-    if (players != null) {
-        if (players.length == 1) {
-            putPlayer1Name(players[0].name);
-        } else if (players.length == 2) {
-            putPlayer1Name(players[0].name);
-            putPlayer2Name(players[1].name);
-            dref.set(1);
-        }
+
+    if (uid != null && players.length === 1) {
+        setupEmptyTopMsgsDiv();
+        putPlayer1Name(players[0].name);
+        putTopMsg1("Hi " + players[0].name + "! You are player 1");
+    } else if (players.length === 2) {
+        setupEmptyTopMsgsDiv();
+        putPlayer2Name(players[1].name);
+        dref.set(1);
+        putTopMsg1("Hi " + players[1].name + "! You are player 2");
     }
 
 }, function (errorObject) {
@@ -137,23 +156,32 @@ function emptyChatDiv() {
 }
 
 function setupPlayer(name) {
+    if (players != null && players.length === 2) {
+        return; // we already have both players in the list
+    }
     var player = {
         name: name,
         wins: 0,
         losses: 0
     };
 
+    if (players == null || players.length === 0) {
+        storageType.setItem(storageKey, 0);
+    } else {
+        storageType.setItem(storageKey, 1);
+    }
+
     players.push(player);
 
     playerDB.set(players);
-
-    if (players.length === 1) {
-        myPlayer = 0;
-        setupEmptyTopMsgsDiv();
-        putTopMsg1("Hi " + myPlayer.name + "! You are player 1");
-    } else if (players.length === 2) {
-        myPlayer = 1;
-        setupEmptyTopMsgsDiv();
-        putTopMsg1("Hi " + myPlayer.name + "! You are player 2");
-    }
 }
+
+window.onunload = function () {
+    if (players != null) {
+        var uid = storageType.getItem(storageKey);
+        players.splice(uid, 1);
+        playerDB.set(players);
+    }
+
+    //storageType.removeItem(storageKey);
+};
