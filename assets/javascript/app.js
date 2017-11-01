@@ -26,29 +26,26 @@ playerDB.on("value", function (snapshot) {
     } else {
         return;  // no data, just return
     }
-    var uid = storageType.getItem(storageKey);
+    var stvalue = storageType.getItem(storageKey);
+    var uid = -1;
+    if (stvalue != null) {
+        uid = Number(stvalue);
+    }
 
     var cnt = players.length;
 
-    if (uid == null) {
-
-    } else if (uid === 0) {
-
-    } else if (uid === 1) {
-        if (cnt === 2) {
-            storageType.setItem(storageKey, 0);  // was second player, now first
-        }
-
+    if (uid === 1 && cnt === 1) {
+        storageType.setItem(storageKey, 0);  // was second player, now first
+        uid = 0;
     }
 
+    putUpNames();
 
-    if (uid != null && players.length === 1) {
+    if (uid === 0) {
         setupEmptyTopMsgsDiv();
-        putPlayer1Name(players[0].name);
         putTopMsg1("Hi " + players[0].name + "! You are player 1");
-    } else if (players.length === 2) {
+    } else if (uid === 1) {
         setupEmptyTopMsgsDiv();
-        putPlayer2Name(players[1].name);
         dref.set(1);
         putTopMsg1("Hi " + players[1].name + "! You are player 2");
     }
@@ -123,15 +120,16 @@ function putMiddleMsg(msg) {
     $("#box2").text(msg);
 }
 
-function putPlayer1Name(name) {
+function putUpNames() {
     $("#box1_1").empty();
-    $("#box1_1").text(name);
+    $("#box1_1").text(players[0].name);
+
+    if (players.length == 2) {
+        $("#box3_1").empty();
+        $("#box3_1").text(players[1].name);
+    }
 }
 
-function putPlayer2Name(name) {
-    $("#box3_1").empty();
-    $("#box3_1").text(name);
-}
 
 $("#playerNameButton").on("click", function () {
     event.preventDefault();
