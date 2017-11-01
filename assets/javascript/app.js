@@ -15,6 +15,8 @@ var chatDB = database.ref("/chat");
 
 var players = [];
 var turn = 1;
+var myPlayer = null;
+
 
 playerDB.on("value", function (snapshot) {
     var data = snapshot.val();
@@ -41,6 +43,14 @@ chatDB.on("value", function (snapshot) {
     if (data == null || data.chat == null) return;
     console.log("chatdb: " + data);
 
+}, function (errorObject) {
+    console.log("The read failed: " + errorObject.code);
+});
+
+dref.on("value", function (snapshot) {
+    var data = snapshot.val();
+    if (data == null) return;
+    console.log("turn: " + data);
 
 }, function (errorObject) {
     console.log("The read failed: " + errorObject.code);
@@ -93,8 +103,6 @@ function putPlayer2Name(name) {
     $("#box3_1").text(name);
 }
 
-var cnt = 0;
-
 $("#playerNameButton").on("click", function () {
     event.preventDefault();
     var playerName = $("#playerNameText").val().trim();
@@ -111,13 +119,6 @@ $("#chatButton").on("click", function () {
     // console.log(msgp);
     $("#chatDiv").prepend(msgp);
 
-    if (cnt === 0) {
-        setupEmptyTopMsgsDiv();
-        putTopMsg1("Top message number 1");
-    } else if (cnt === 1) {
-        putTopMsg2("second message");
-    }
-    cnt++;
 });
 
 function emptyChatDiv() {
@@ -134,4 +135,14 @@ function setupPlayer(name) {
     players.push(player);
 
     playerDB.set(players);
+
+    if (players.length === 1) {
+        myPlayer = players[0];
+        setupEmptyTopMsgsDiv();
+        putTopMsg1("You are player 1");
+    } else if (players.length === 2) {
+        myPlayer = players[1];
+        setupEmptyTopMsgsDiv();
+        putTopMsg1("You are player 2");
+    }
 }
