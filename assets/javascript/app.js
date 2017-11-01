@@ -42,11 +42,8 @@ playerDB.on("value", function (snapshot) {
     putUpNames();
 
     if (uid === 0) {
-        setupEmptyTopMsgsDiv();
         putTopMsg1("Hi " + players[0].name + "! You are player 1");
     } else if (uid === 1) {
-        setupEmptyTopMsgsDiv();
-        dref.set(1);
         putTopMsg1("Hi " + players[1].name + "! You are player 2");
     }
 
@@ -56,7 +53,7 @@ playerDB.on("value", function (snapshot) {
 
 chatDB.on("value", function (snapshot) {
     var data = snapshot.val();
-    if (data == null || data.chat == null) return;
+    if (data === null || data.chat === null) return;
     console.log("chatdb: " + data);
 
 }, function (errorObject) {
@@ -65,18 +62,24 @@ chatDB.on("value", function (snapshot) {
 
 dref.on("value", function (snapshot) {
     var turn = snapshot.val();
-    if (turn == null) return;
+    if (turn === null || players === null) return;
     console.log("turn: " + turn);
-    setupEmptyTopMsgsDiv();
+    // setupEmptyTopMsgsDiv();
 
-    if (turn === 1 && myPlayer === 0) {
-        putTopMsg2("It's your turn!");
-    } else if (turn === 2 && myPlayer === 0) {
-        putTopMsg2("Waiting for " + players[1].name + " to choose.");
-    } else if (turn === 1 && myPlayer === 1) {
-        putTopMsg2("Waiting for " + players[0].name + " to choose.");
-    } else if (turn === 2 && myPlayer === 1) {
-        putTopMsg2("It's your turn!");
+    var uid = Number(storageType.getItem(storageKey));
+    if (turn === 0) {
+        if (uid === 0) {
+            putTopMsg2("It's your turn!");
+        } else {
+            putTopMsg2("Waiting for " + players[0].name + " to choose!");
+            console.log("Waiting for " + players[0].name + " to choose!");
+        }
+    } else if (turn === 1 ) {
+        if (uid === 1) {
+            putTopMsg2("It's your turn!");
+        } else {
+            putTopMsg2("Waiting for " + players[1].name + " to choose!");
+        }
     }
 
 }, function (errorObject) {
@@ -163,15 +166,24 @@ function setupPlayer(name) {
         losses: 0
     };
 
+    var startTurn = false;
+
     if (players == null || players.length === 0) {
         storageType.setItem(storageKey, 0);
+        setupEmptyTopMsgsDiv();
     } else {
         storageType.setItem(storageKey, 1);
+        setupEmptyTopMsgsDiv();
+        startTurn = true;
     }
 
     players.push(player);
 
     playerDB.set(players);
+
+    if (startTurn) {
+        dref.set(0);
+    }
 }
 
 window.onunload = function () {
@@ -179,6 +191,7 @@ window.onunload = function () {
         var uid = storageType.getItem(storageKey);
         players.splice(uid, 1);
         playerDB.set(players);
+        dref.remove();
     }
 
     //storageType.removeItem(storageKey);
