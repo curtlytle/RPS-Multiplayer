@@ -37,7 +37,7 @@ playerDB.on("value", function (snapshot) {
     if (uid === 1 && cnt === 1) {
         storageType.setItem(storageKey, 0);  // was second player, now first
         putTopMsg2(" ");
-        $("#box3_1").empty();
+        $("#pNameBox1").empty();
         uid = 0;
     }
 
@@ -72,6 +72,7 @@ dref.on("value", function (snapshot) {
     if (turn === 0) {
         if (uid === 0) {
             putTopMsg2("It's your turn!");
+            displayRPS0();
         } else {
             putTopMsg2("Waiting for " + players[0].name + " to choose!");
             console.log("Waiting for " + players[0].name + " to choose!");
@@ -79,14 +80,23 @@ dref.on("value", function (snapshot) {
     } else if (turn === 1 ) {
         if (uid === 1) {
             putTopMsg2("It's your turn!");
+            displayRPS1();
         } else {
             putTopMsg2("Waiting for " + players[1].name + " to choose!");
+            // displayRPSBlank($("#rpsBox0"));
         }
     }
 
 }, function (errorObject) {
     console.log("The read failed: " + errorObject.code);
 });
+
+$(document).on("click touchstart", ".rps", pickRPS);
+
+function pickRPS () {
+    var text = $(this).text();
+    displayRPS0Pick(text);
+}
 
 function emptyTopInput() {
     $("#topPanel").empty();
@@ -110,6 +120,59 @@ function setupEmptyTopMsgsDiv() {
     $("#topPanel").append(div2);
 }
 
+function displayRPS0() {
+    var divRPS = $("#rpsBox0");
+    divRPS.empty();
+    var divr = $("<div id='box0_rock' class='rps'>");
+    divr.text("Rock");
+    var divp = $("<div id='box0_paper' class='rps'>");
+    divp.text("Paper");
+    var divs = $("<div id='box0_scissors' class='rps'>");
+    divs.text("Scissors");
+
+    divRPS.append(divr);
+    divRPS.append(divp);
+    divRPS.append(divs);
+}
+
+function displayRPS0Pick(pick) {
+    var divRPS = $("#rpsBox0");
+    divRPS.empty();
+    var divb = $("<div class='rpsBlank'>");
+    divb.text("______________");
+    var divp = $("<div class='rpsPick'>");
+    divp.text(pick);
+
+    divRPS.append(divb);
+    divRPS.append(divp);
+    divRPS.append(divb);
+}
+
+function displayRPS1() {
+    var divRPS = $("#rpsBox1");
+    divRPS.empty();
+    var divr = $("<div id='box1_rock' class='rps'>");
+    divr.text("Rock");
+    var divp = $("<div id='box1_paper' class='rps'>");
+    divp.text("Paper");
+    var divs = $("<div id='box1_scissors' class='rps'>");
+    divs.text("Scissors");
+
+    divRPS.append(divr);
+    divRPS.append(divp);
+    divRPS.append(divs);
+}
+
+function displayRPSBlank(divElement) {
+    divElement.empty();
+    var div1 = $("<div class='rpsBlank'>");
+    divr.text("&nbsp;");
+
+    divElement.append(div1);
+    divElement.append(div1);
+    divElement.append(div1);
+}
+
 function putTopMsg1(msg) {
     $("#topMsg1").empty();
     $("#topMsg1").text(msg);
@@ -121,20 +184,19 @@ function putTopMsg2(msg) {
 }
 
 function putMiddleMsg(msg) {
-    $("#box2").empty();
-    $("#box2").text(msg);
+    $("#boxM").empty();
+    $("#boxM").text(msg);
 }
 
 function putUpNames() {
-    $("#box1_1").empty();
-    $("#box1_1").text(players[0].name);
+    $("#pNameBox0").empty();
+    $("#pNameBox0").text(players[0].name);
 
     if (players.length == 2) {
-        $("#box3_1").empty();
-        $("#box3_1").text(players[1].name);
+        $("#pNameBox1").empty();
+        $("#pNameBox1").text(players[1].name);
     }
 }
-
 
 $("#playerNameButton").on("click", function () {
     event.preventDefault();

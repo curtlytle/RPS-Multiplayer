@@ -24,7 +24,17 @@ body {
     padding: 5px;
 }
 
-#box2 {
+.rpsBlank {
+    text-align: center;
+    padding: 5px;
+}
+.rpsPick {
+    text-align: center;
+    padding: 5px;
+    font-size: 30px;
+}
+
+#boxM {
     font-size: 20px;
     text-align: center;
 }
