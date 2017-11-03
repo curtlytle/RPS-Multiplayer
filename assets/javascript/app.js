@@ -43,7 +43,7 @@ playerDB.on("value", function (snapshot) {
         var player = players[i];
         putUpName(player.name, i);
         if (uid === i) {
-            putTopMsg2("Hi " + player.name + "!  Your are player " + (i + 1));
+            putTopMsg1("Hi " + player.name + "!  Your are player " + (i + 1));
         }
 
     }
@@ -51,6 +51,7 @@ playerDB.on("value", function (snapshot) {
         displayTotals1();
         if (players[0].pick !== NADA && players[1].pick !== NADA) {
             console.log("Both picked, now determine....");
+            determineWin();
         }
     }
 
@@ -62,6 +63,12 @@ turnDB.on("value", function (snapshot) {
     var turn = snapshot.val();
     if (turn === null) return;
     console.log("turn: " + turn);
+
+    if (turn === 0) {
+        putTopMsg2("Waiting for another player to join.");
+    } else if (turn === 1) {
+        putTopMsg2("Make your choice.");
+    }
 
 }, function (errorObject) {
     console.log("The read failed: " + errorObject.code);
@@ -75,6 +82,18 @@ chatDB.on("value", function (snapshot) {
 }, function (errorObject) {
     console.log("The read failed: " + errorObject.code);
 });
+
+function determineWin() {
+    var p0 = players[0].pick;
+    var p1 = players[1].pick;
+
+    putMiddleMsg(players[0].name + " Wins!");
+    players[0].wins = 1;
+    players[0].pick = NADA;
+    players[1].pick = NADA;
+
+    playerDB.set(players);
+}
 
 
 function getUser() {  // player 1 is 0, player 2 is 1, anything else will return -1
@@ -117,9 +136,11 @@ function pickRPS() {
     if (uid === 0) {
         displayRPS0Pick(text);
         players[0].pick = text;
+        putTopMsg2("Waiting for " + players[1].name + " to pick.");
     } else if (uid === 1) {
         displayRPS1Pick(text);
         players[1].pick = text;
+        putTopMsg2("Waiting for " + players[0].name + " to pick.");
     }
 
     playerDB.set(players);
@@ -136,37 +157,21 @@ function setupPlayer(name) {
         pick: NADA
     };
 
-    var startTurn = false;
-
     if (players === null || players.length === 0) {
         setUser(0);
         setupEmptyTopMsgsDiv();
-        putTopMsg2("Waiting for another player to join.");
         displayRPS0();
         turnDB.set(0);
     } else {
         setUser(1);
         setupEmptyTopMsgsDiv();
-        putTopMsg2("Make your choice.");
         displayRPS1();
         turnDB.set(1);
-        startTurn = true;
     }
 
     players.push(player);
 
     playerDB.set(players);
-
-
-
-    if (startTurn) {
-        var uid = getUser();
-        if (uid === 0) {
-
-        } else {
-        }
-
-    }
 }
 
 window.onunload = function () {
