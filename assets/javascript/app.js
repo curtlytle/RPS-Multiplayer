@@ -10,44 +10,58 @@ firebase.initializeApp(config);
 
 var database = firebase.database();
 var playerDB = database.ref("/players");
-var dref = database.ref("/turn");
+var turnDB = database.ref("/turn");
 var chatDB = database.ref("/chat");
 
 var players = [];
 var turn = 0;
 var storageType = sessionStorage;
 var storageKey = "myRPSid";
+var NADA = "nada";
 
 
 playerDB.on("value", function (snapshot) {
     var data = snapshot.val();
-    if (data != null) {
+    if (data !== null) {
         players = data;
     } else {
         return;  // no data, just return
     }
-    var stvalue = storageType.getItem(storageKey);
-    var uid = -1;
-    if (stvalue != null) {
-        uid = Number(stvalue);
-    }
+    var uid = getUser();
 
     var cnt = players.length;
 
     if (uid === 1 && cnt === 1) {
-        storageType.setItem(storageKey, 0);  // was second player, now first
+        setUser(0);  // was second player, now first
         putTopMsg2(" ");
         $("#pNameBox1").empty();
         uid = 0;
     }
+    displayTotals0();
 
-    putUpNames();
+    for (var i = 0; i < players.length; i++) {
+        var player = players[i];
+        putUpName(player.name, i);
+        if (uid === i) {
+            putTopMsg2("Hi " + player.name + "!  Your are player " + (i + 1));
+        }
 
-    if (uid === 0) {
-        putTopMsg1("Hi " + players[0].name + "! You are player 1");
-    } else if (uid === 1) {
-        putTopMsg1("Hi " + players[1].name + "! You are player 2");
     }
+    if (cnt === 2) {
+        displayTotals1();
+        if (players[0].pick !== NADA && players[1].pick !== NADA) {
+            console.log("Both picked, now determine....");
+        }
+    }
+
+}, function (errorObject) {
+    console.log("The read failed: " + errorObject.code);
+});
+
+turnDB.on("value", function (snapshot) {
+    var turn = snapshot.val();
+    if (turn === null) return;
+    console.log("turn: " + turn);
 
 }, function (errorObject) {
     console.log("The read failed: " + errorObject.code);
@@ -62,41 +76,110 @@ chatDB.on("value", function (snapshot) {
     console.log("The read failed: " + errorObject.code);
 });
 
-dref.on("value", function (snapshot) {
-    var turn = snapshot.val();
-    if (turn === null || players === null) return;
-    console.log("turn: " + turn);
-    // setupEmptyTopMsgsDiv();
 
-    var uid = Number(storageType.getItem(storageKey));
-    if (turn === 0) {
-        if (uid === 0) {
-            putTopMsg2("It's your turn!");
-            displayRPS0();
-        } else {
-            putTopMsg2("Waiting for " + players[0].name + " to choose!");
-            console.log("Waiting for " + players[0].name + " to choose!");
-        }
-    } else if (turn === 1 ) {
-        if (uid === 1) {
-            putTopMsg2("It's your turn!");
-            displayRPS1();
-        } else {
-            putTopMsg2("Waiting for " + players[1].name + " to choose!");
-            // displayRPSBlank($("#rpsBox0"));
-        }
+function getUser() {  // player 1 is 0, player 2 is 1, anything else will return -1
+    var stvalue = storageType.getItem(storageKey);
+    var uid = -1;
+    if (stvalue != null) {
+        uid = Number(stvalue);
     }
 
-}, function (errorObject) {
-    console.log("The read failed: " + errorObject.code);
-});
+    return uid;
+}
+
+function setUser(userId) {
+    storageType.setItem(storageKey, userId);
+}
 
 $(document).on("click touchstart", ".rps", pickRPS);
 
-function pickRPS () {
+$("#playerNameButton").on("click", function () {
+    event.preventDefault();
+    var playerName = $("#playerNameText").val().trim();
+
+    setupPlayer(playerName);
+
+});
+
+$("#chatButton").on("click", function () {
+    event.preventDefault();
+    var chatMsg = $("#chatText").val().trim();
+
+    var msgp = $("<p class='chatP'>").text(chatMsg);
+    // console.log(msgp);
+    $("#chatDiv").prepend(msgp);
+
+});
+
+function pickRPS() {
     var text = $(this).text();
-    displayRPS0Pick(text);
+    var uid = getUser();
+    if (uid === 0) {
+        displayRPS0Pick(text);
+        players[0].pick = text;
+    } else if (uid === 1) {
+        displayRPS1Pick(text);
+        players[1].pick = text;
+    }
+
+    playerDB.set(players);
 }
+
+function setupPlayer(name) {
+    if (players != null && players.length === 2) {
+        return; // we already have both players in the list
+    }
+    var player = {
+        name: name,
+        wins: 0,
+        losses: 0,
+        pick: NADA
+    };
+
+    var startTurn = false;
+
+    if (players === null || players.length === 0) {
+        setUser(0);
+        setupEmptyTopMsgsDiv();
+        putTopMsg2("Waiting for another player to join.");
+        displayRPS0();
+        turnDB.set(0);
+    } else {
+        setUser(1);
+        setupEmptyTopMsgsDiv();
+        putTopMsg2("Make your choice.");
+        displayRPS1();
+        turnDB.set(1);
+        startTurn = true;
+    }
+
+    players.push(player);
+
+    playerDB.set(players);
+
+
+
+    if (startTurn) {
+        var uid = getUser();
+        if (uid === 0) {
+
+        } else {
+        }
+
+    }
+}
+
+window.onunload = function () {
+    if (players != null) {
+        var uid = getUser();
+        if (uid === -1) uid = 1;
+        players.splice(uid, 1);
+        playerDB.set(players);
+        turnDB.remove();
+    }
+
+    //storageType.removeItem(storageKey);
+};
 
 function emptyTopInput() {
     $("#topPanel").empty();
@@ -148,6 +231,19 @@ function displayRPS0Pick(pick) {
     divRPS.append(divb);
 }
 
+function displayRPS1Pick(pick) {
+    var divRPS = $("#rpsBox1");
+    divRPS.empty();
+    var divb = $("<div class='rpsBlank'>");
+    divb.text("______________");
+    var divp = $("<div class='rpsPick'>");
+    divp.text(pick);
+
+    divRPS.append(divb);
+    divRPS.append(divp);
+    divRPS.append(divb);
+}
+
 function displayRPS1() {
     var divRPS = $("#rpsBox1");
     divRPS.empty();
@@ -188,75 +284,37 @@ function putMiddleMsg(msg) {
     $("#boxM").text(msg);
 }
 
-function putUpNames() {
-    $("#pNameBox0").empty();
-    $("#pNameBox0").text(players[0].name);
-
-    if (players.length == 2) {
-        $("#pNameBox1").empty();
-        $("#pNameBox1").text(players[1].name);
-    }
+function putUpName(name, i) {
+    var boxId = "#pNameBox" + i;
+    $(boxId).empty();
+    $(boxId).text(name);
 }
 
-$("#playerNameButton").on("click", function () {
-    event.preventDefault();
-    var playerName = $("#playerNameText").val().trim();
 
-    setupPlayer(playerName);
+function displayTotals0() {
+    var totDiv = $("#totalsBox0");
+    totDiv.empty();
 
-});
+    var msg = "Wins: 0, Losses: 0";
+    if (players[0] !== null) {
+        msg = "Wins: " + players[0].wins + ", Losses: " + players[0].losses;
+    }
+    totDiv.text(msg);
+}
 
-$("#chatButton").on("click", function () {
-    event.preventDefault();
-    var chatMsg = $("#chatText").val().trim();
+function displayTotals1() {
+    var totDiv = $("#totalsBox1");
+    totDiv.empty();
 
-    var msgp = $("<p class='chatP'>").text(chatMsg);
-    // console.log(msgp);
-    $("#chatDiv").prepend(msgp);
-
-});
+    var msg = "Wins: 0, Losses: 0";
+    if (players[1] !== null) {
+        msg = "Wins: " + players[1].wins + ", Losses: " + players[1].losses;
+    }
+    totDiv.text(msg);
+}
 
 function emptyChatDiv() {
     $("#chatDiv").empty();
 }
 
-function setupPlayer(name) {
-    if (players != null && players.length === 2) {
-        return; // we already have both players in the list
-    }
-    var player = {
-        name: name,
-        wins: 0,
-        losses: 0
-    };
 
-    var startTurn = false;
-
-    if (players == null || players.length === 0) {
-        storageType.setItem(storageKey, 0);
-        setupEmptyTopMsgsDiv();
-    } else {
-        storageType.setItem(storageKey, 1);
-        setupEmptyTopMsgsDiv();
-        startTurn = true;
-    }
-
-    players.push(player);
-
-    playerDB.set(players);
-
-    if (startTurn) {
-        dref.set(0);
-    }
-}
-
-window.onunload = function () {
-    if (players != null) {
-        var uid = storageType.getItem(storageKey);
-        players.splice(uid, 1);
-        playerDB.set(players);
-        dref.remove();
-    }
-
-    //storageType.removeItem(storageKey);
-};
