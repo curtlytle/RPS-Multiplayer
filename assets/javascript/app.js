@@ -22,11 +22,11 @@ var NADA = "nada";
 
 playerDB.on("value", function (snapshot) {
     var data = snapshot.val();
-    if (data !== null) {
-        players = data;
-    } else {
-        return;  // no data, just return
+    if (data === null) {
+        players = [];
+       return;  // no data, just return
     }
+    players = data;
     var uid = getUser();
 
     var cnt = players.length;
@@ -87,19 +87,79 @@ function determineWin() {
     var p0 = players[0].pick;
     var p1 = players[1].pick;
 
-    putMiddleMsg(players[0].name + " Wins!");
-    players[0].wins = 1;
+    var p0flag = didP0Win(p0, p1);
+
+    if (p0flag === 0) {
+        putMiddleMsg("TIE!");
+    } else if (p0flag === 1) {
+        putMiddleMsg(players[0].name + " Wins!");
+        players[0].wins++;
+        players[1].losses++;
+    } else if (p0flag === 2) {
+        putMiddleMsg(players[1].name + " Wins!");
+        players[1].wins++;
+        players[0].losses++;
+    }
+
+    displayRPS0Pick(p0);
+    displayRPS1Pick(p1);
+
     players[0].pick = NADA;
     players[1].pick = NADA;
 
+
     playerDB.set(players);
+
+    setTimeout(startOver, 3000);
+}
+
+function startOver() {
+    console.log("Start over, refresh....");
+    var uid = getUser();
+    if (uid === 0) {
+        displayRPS0();
+        displayRPSBlank($("#rpsBox1"));
+    } else if (uid === 1) {
+        displayRPS1();
+        displayRPSBlank($("#rpsBox0"));
+    }
+    putMiddleMsg("");
+    putTopMsg2("Make your choice!");
+}
+
+function didP0Win (p0, p1) {  // 0 for tie, 1 for a win, 2 loss
+    if (p0 === "Rock") {
+        if (p1 === "Rock") {
+            return 0;
+        } else if (p1 === "Scissors") {
+            return 1;
+        } else if (p1 === "Paper") {
+            return 2;
+        }
+    } else if (p0 === "Paper") {
+        if (p1 === "Rock") {
+            return 1;
+        } else if (p1 === "Scissors") {
+            return 2;
+        } else if (p1 === "Paper") {
+            return 0;
+        }
+    } else if (p0 === "Scissors") {
+        if (p1 === "Rock") {
+            return 2;
+        } else if (p1 === "Scissors") {
+            return 0;
+        } else if (p1 === "Paper") {
+            return 1;
+        }
+    }
 }
 
 
 function getUser() {  // player 1 is 0, player 2 is 1, anything else will return -1
     var stvalue = storageType.getItem(storageKey);
     var uid = -1;
-    if (stvalue != null) {
+    if (stvalue !== null) {
         uid = Number(stvalue);
     }
 
@@ -147,7 +207,7 @@ function pickRPS() {
 }
 
 function setupPlayer(name) {
-    if (players != null && players.length === 2) {
+    if (players !== null && players.length === 2) {
         return; // we already have both players in the list
     }
     var player = {
@@ -175,7 +235,7 @@ function setupPlayer(name) {
 }
 
 window.onunload = function () {
-    if (players != null) {
+    if (players !== null) {
         var uid = getUser();
         if (uid === -1) uid = 1;
         players.splice(uid, 1);
@@ -183,7 +243,7 @@ window.onunload = function () {
         turnDB.remove();
     }
 
-    //storageType.removeItem(storageKey);
+    storageType.removeItem(storageKey);
 };
 
 function emptyTopInput() {
@@ -267,7 +327,7 @@ function displayRPS1() {
 function displayRPSBlank(divElement) {
     divElement.empty();
     var div1 = $("<div class='rpsBlank'>");
-    divr.text("&nbsp;");
+    div1.text("");
 
     divElement.append(div1);
     divElement.append(div1);
