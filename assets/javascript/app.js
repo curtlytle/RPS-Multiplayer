@@ -24,7 +24,7 @@ playerDB.on("value", function (snapshot) {
     var data = snapshot.val();
     if (data === null) {
         players = [];
-       return;  // no data, just return
+        return;  // no data, just return
     }
     players = data;
     var uid = getUser();
@@ -33,11 +33,16 @@ playerDB.on("value", function (snapshot) {
 
     if (uid === 1 && cnt === 1) {
         setUser(0);  // was second player, now first
+        players[0].wins = 0;
+        players[0].losses = 0;
+        displayRPSBlank(1);
+        // displayRPS(0);
+        displayTotals(1, true);
         putTopMsg2(" ");
         $("#pNameBox1").empty();
         uid = 0;
     }
-    displayTotals0();
+    displayTotals(0, false);
 
     for (var i = 0; i < players.length; i++) {
         var player = players[i];
@@ -48,7 +53,10 @@ playerDB.on("value", function (snapshot) {
 
     }
     if (cnt === 2) {
-        displayTotals1();
+        if (players[uid].pick === NADA) {
+            displayRPS(uid);
+        }
+        displayTotals(1, false);
         if (players[0].pick !== NADA && players[1].pick !== NADA) {
             console.log("Both picked, now determine....");
             determineWin();
@@ -101,33 +109,32 @@ function determineWin() {
         players[0].losses++;
     }
 
-    displayRPS0Pick(p0);
-    displayRPS1Pick(p1);
-
-    players[0].pick = NADA;
-    players[1].pick = NADA;
+    displayRPSPick(0, p0);
+    displayRPSPick(1, p1);
 
 
-    playerDB.set(players);
-
-    setTimeout(startOver, 3000);
+    setTimeout(startOver, 4000);
 }
 
 function startOver() {
     console.log("Start over, refresh....");
     var uid = getUser();
+    players[0].pick = NADA;
+    players[1].pick = NADA;
+    playerDB.set(players);
+
     if (uid === 0) {
-        displayRPS0();
-        displayRPSBlank($("#rpsBox1"));
+        displayRPS(0);
+        displayRPSBlank(1);
     } else if (uid === 1) {
-        displayRPS1();
-        displayRPSBlank($("#rpsBox0"));
+        displayRPS(1);
+        displayRPSBlank(0);
     }
     putMiddleMsg("");
     putTopMsg2("Make your choice!");
 }
 
-function didP0Win (p0, p1) {  // 0 for tie, 1 for a win, 2 loss
+function didP0Win(p0, p1) {  // 0 for tie, 1 for a win, 2 loss
     if (p0 === "Rock") {
         if (p1 === "Rock") {
             return 0;
@@ -193,15 +200,12 @@ $("#chatButton").on("click", function () {
 function pickRPS() {
     var text = $(this).text();
     var uid = getUser();
-    if (uid === 0) {
-        displayRPS0Pick(text);
-        players[0].pick = text;
-        putTopMsg2("Waiting for " + players[1].name + " to pick.");
-    } else if (uid === 1) {
-        displayRPS1Pick(text);
-        players[1].pick = text;
-        putTopMsg2("Waiting for " + players[0].name + " to pick.");
-    }
+
+    displayRPSPick(uid, text);
+    players[uid].pick = text;
+    var other = 0;
+    if (uid === 0) other = 1;
+    putTopMsg2("Waiting for " + players[other].name + " to pick.");
 
     playerDB.set(players);
 }
@@ -217,15 +221,15 @@ function setupPlayer(name) {
         pick: NADA
     };
 
+
     if (players === null || players.length === 0) {
         setUser(0);
         setupEmptyTopMsgsDiv();
-        displayRPS0();
         turnDB.set(0);
     } else {
+        var uid = getUser();
         setUser(1);
         setupEmptyTopMsgsDiv();
-        displayRPS1();
         turnDB.set(1);
     }
 
@@ -239,9 +243,16 @@ window.onunload = function () {
         var uid = getUser();
         if (uid === -1) uid = 1;
         players.splice(uid, 1);
+        if (players === null || players.length === 0) {
+            turnDB.remove();
+        } else {
+            players[0].wins = 0;
+            players[0].losses = 0;
+            turnDB.set(0);
+        }
         playerDB.set(players);
-        turnDB.remove();
     }
+
 
     storageType.removeItem(storageKey);
 };
@@ -268,23 +279,9 @@ function setupEmptyTopMsgsDiv() {
     $("#topPanel").append(div2);
 }
 
-function displayRPS0() {
-    var divRPS = $("#rpsBox0");
-    divRPS.empty();
-    var divr = $("<div id='box0_rock' class='rps'>");
-    divr.text("Rock");
-    var divp = $("<div id='box0_paper' class='rps'>");
-    divp.text("Paper");
-    var divs = $("<div id='box0_scissors' class='rps'>");
-    divs.text("Scissors");
-
-    divRPS.append(divr);
-    divRPS.append(divp);
-    divRPS.append(divs);
-}
-
-function displayRPS0Pick(pick) {
-    var divRPS = $("#rpsBox0");
+function displayRPSPick(id, pick) {
+    var rpsBox = "#rpsBox" + id;
+    var divRPS = $(rpsBox);
     divRPS.empty();
     var divb = $("<div class='rpsBlank'>");
     divb.text("______________");
@@ -296,27 +293,15 @@ function displayRPS0Pick(pick) {
     divRPS.append(divb);
 }
 
-function displayRPS1Pick(pick) {
-    var divRPS = $("#rpsBox1");
+function displayRPS(id) {
+    var rpsBox = "#rpsBox" + id;
+    var divRPS = $(rpsBox);
     divRPS.empty();
-    var divb = $("<div class='rpsBlank'>");
-    divb.text("______________");
-    var divp = $("<div class='rpsPick'>");
-    divp.text(pick);
-
-    divRPS.append(divb);
-    divRPS.append(divp);
-    divRPS.append(divb);
-}
-
-function displayRPS1() {
-    var divRPS = $("#rpsBox1");
-    divRPS.empty();
-    var divr = $("<div id='box1_rock' class='rps'>");
+    var divr = $("<div class='rps'>");
     divr.text("Rock");
-    var divp = $("<div id='box1_paper' class='rps'>");
+    var divp = $("<div class='rps'>");
     divp.text("Paper");
-    var divs = $("<div id='box1_scissors' class='rps'>");
+    var divs = $("<div class='rps'>");
     divs.text("Scissors");
 
     divRPS.append(divr);
@@ -324,14 +309,16 @@ function displayRPS1() {
     divRPS.append(divs);
 }
 
-function displayRPSBlank(divElement) {
-    divElement.empty();
+function displayRPSBlank(id) {
+    var rpsBox = "#rpsBox" + id;
+    var divRPS = $(rpsBox);
+    divRPS.empty();
     var div1 = $("<div class='rpsBlank'>");
     div1.text("");
 
-    divElement.append(div1);
-    divElement.append(div1);
-    divElement.append(div1);
+    divRPS.append(div1);
+    divRPS.append(div1);
+    divRPS.append(div1);
 }
 
 function putTopMsg1(msg) {
@@ -356,24 +343,17 @@ function putUpName(name, i) {
 }
 
 
-function displayTotals0() {
-    var totDiv = $("#totalsBox0");
+function displayTotals(id, justEmptyIt) {
+    var divstr = "#totalsBox" + id;
+    var totDiv = $(divstr);
     totDiv.empty();
-
-    var msg = "Wins: 0, Losses: 0";
-    if (players[0] !== null) {
-        msg = "Wins: " + players[0].wins + ", Losses: " + players[0].losses;
+    if (justEmptyIt) {
+        return;
     }
-    totDiv.text(msg);
-}
-
-function displayTotals1() {
-    var totDiv = $("#totalsBox1");
-    totDiv.empty();
 
     var msg = "Wins: 0, Losses: 0";
-    if (players[1] !== null) {
-        msg = "Wins: " + players[1].wins + ", Losses: " + players[1].losses;
+    if (players[id] !== null) {
+        msg = "Wins: " + players[id].wins + ", Losses: " + players[id].losses;
     }
     totDiv.text(msg);
 }
