@@ -14,6 +14,7 @@ var turnDB = database.ref("/turn");
 var chatDB = database.ref("/chat");
 
 var players = [];
+var chats = [];
 var turn = 0;
 var storageType = sessionStorage;
 var storageKey = "myRPSid";
@@ -48,7 +49,7 @@ playerDB.on("value", function (snapshot) {
         var player = players[i];
         putUpName(player.name, i);
         if (uid === i) {
-            putTopMsg1("Hi " + player.name + "!  Your are player " + (i + 1));
+            putTopMsg1("Hi " + player.name + "!  You are player " + (i + 1));
         }
 
     }
@@ -84,8 +85,20 @@ turnDB.on("value", function (snapshot) {
 
 chatDB.on("value", function (snapshot) {
     var data = snapshot.val();
-    if (data === null || data.chat === null) return;
+    if (data === null || data.length === 0) {
+        emptyChatDiv();
+        return;
+    }
     console.log("chatdb: " + data);
+    chats = data;
+    emptyChatDiv();
+
+    for (var i = 0; i < chats.length; i++) {
+        var chat = chats[i];
+        var msgp = $("<p class='chatP'>").text(chat);
+        // console.log(msgp);
+        $("#chatDiv").append(msgp);
+    }
 
 }, function (errorObject) {
     console.log("The read failed: " + errorObject.code);
@@ -190,10 +203,15 @@ $("#playerNameButton").on("click", function () {
 $("#chatButton").on("click", function () {
     event.preventDefault();
     var chatMsg = $("#chatText").val().trim();
+    if (players === null || players.length !== 2) {
+        var msgp = $("<p class='chatP'>").text("Wait for another user to chat.");
+        // console.log(msgp);
+        $("#chatDiv").append(msgp);
+        return;
+    }
 
-    var msgp = $("<p class='chatP'>").text(chatMsg);
-    // console.log(msgp);
-    $("#chatDiv").prepend(msgp);
+    chats.push(players[getUser()].name + ": " + chatMsg);
+    chatDB.set(chats);
 
 });
 
@@ -231,6 +249,7 @@ function setupPlayer(name) {
         setUser(1);
         setupEmptyTopMsgsDiv();
         turnDB.set(1);
+        emptyChatDiv();
     }
 
     players.push(player);
@@ -253,7 +272,9 @@ window.onunload = function () {
         playerDB.set(players);
     }
 
-
+    emptyChatDiv();
+    chats = [];
+    chatDB.set(chats);
     storageType.removeItem(storageKey);
 };
 
