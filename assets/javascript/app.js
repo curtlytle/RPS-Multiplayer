@@ -36,14 +36,18 @@ playerDB.on("value", function (snapshot) {
         setUser(0);  // was second player, now first
         players[0].wins = 0;
         players[0].losses = 0;
-        displayRPSBlank(1);
-        // displayRPS(0);
-        displayTotals(1, true);
         putTopMsg2(" ");
-        $("#pNameBox1").empty();
         uid = 0;
     }
-    displayTotals(0, false);
+    if (cnt === 1) {
+        displayRPSBlank(0);
+        displayRPSBlank(1);
+        emptyNameInBox(1);
+        displayTotals(0, true);
+        displayTotals(1, true);
+    } else {
+        displayTotals(0, false);
+    }
 
     for (var i = 0; i < players.length; i++) {
         var player = players[i];
@@ -97,7 +101,7 @@ chatDB.on("value", function (snapshot) {
         var chat = chats[i];
         var msgp = $("<p class='chatP'>").text(chat);
         // console.log(msgp);
-        $("#chatDiv").append(msgp);
+        $("#chatDiv").append(chat + "\n");
     }
 
 }, function (errorObject) {
@@ -202,17 +206,16 @@ $("#playerNameButton").on("click", function () {
 
 $("#chatButton").on("click", function () {
     event.preventDefault();
-    var chatMsg = $("#chatText").val().trim();
+    var chatText = $("#chatText");
+    var chatMsg = chatText.val().trim();
     if (players === null || players.length !== 2) {
-        var msgp = $("<p class='chatP'>").text("Wait for another user to chat.");
-        // console.log(msgp);
-        $("#chatDiv").append(msgp);
+        $("#chatDiv").append("Wait for another user to chat.");
         return;
     }
 
-    chats.push(players[getUser()].name + ": " + chatMsg);
+    chats.push("[" + players[getUser()].name + "]  " + chatMsg);
     chatDB.set(chats);
-
+    chatText.val("");
 });
 
 function pickRPS() {
@@ -271,6 +274,7 @@ window.onunload = function () {
         }
         playerDB.set(players);
     }
+
 
     emptyChatDiv();
     chats = [];
@@ -361,6 +365,11 @@ function putUpName(name, i) {
     var boxId = "#pNameBox" + i;
     $(boxId).empty();
     $(boxId).text(name);
+}
+
+function emptyNameInBox(i) {
+    var boxId = "#pNameBox" + i;
+    $(boxId).empty();
 }
 
 

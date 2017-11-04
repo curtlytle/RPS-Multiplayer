@@ -13,6 +13,11 @@ body {
     height: 60px;
 }
 
+#topMsg1 {
+    font-size: 22px;
+    color: #122b40;
+}
+
 .playerName {
     font-size:  24px;
     text-align: center;
@@ -35,8 +40,10 @@ body {
 }
 
 #boxM {
-    font-size: 20px;
+    font-size: 35px;
     text-align: center;
+    color: #bb2200;
+    padding-top: 30px;
 }
 
 .rps:hover {
@@ -61,14 +68,16 @@ body {
 }
 
 #chatDiv {
-    width: 600px;
+    width: 700px;
     height: 200px;
     margin: 5px;
     background-color: white;
+    margin-left: 55px;
 }
 #chatText {
     width: 600px;
     float: left;
+    margin-left: 55px;
 }
 
 .gamebox {
