@@ -13,14 +13,14 @@ var playerDB = database.ref("/players");
 var turnDB = database.ref("/turn");
 var chatDB = database.ref("/chat");
 
-var players = [];
-var chats = [];
-var turn = 0;
+var players = [];  // holds player objects and stores in Firebase
+var chats = [];  // holds all the chats and stores in Firebase - clears out when game is restarted
+var turn = 0;  // used to key when to start the game
 var storageType = sessionStorage;
-var storageKey = "myRPSid";
-var NADA = "nada";
+var storageKey = "myRPSid";  // key for getting what user this is from sessionStorage
+var NADA = "nada";  // for when nothing is picked
 
-
+// Players Firebase change event
 playerDB.on("value", function (snapshot) {
     var data = snapshot.val();
     if (data === null) {
@@ -39,7 +39,7 @@ playerDB.on("value", function (snapshot) {
         putTopMsg2(" ");
         uid = 0;
     }
-    if (cnt === 1) {
+    if (cnt === 1) {  // only one player on, blank out second screens
         displayRPSBlank(0);
         displayRPSBlank(1);
         emptyNameInBox(1);
@@ -55,19 +55,17 @@ playerDB.on("value", function (snapshot) {
         if (uid === i) {
             putTopMsg1("Hi " + player.name + "!  You are player " + (i + 1));
         }
-
     }
-    if (cnt === 2) {
-        if (players[uid].pick === NADA) {
+    if (cnt === 2) {  // both players are on
+        if (players[uid].pick === NADA) {  // nothing picked, show choices
             displayRPS(uid);
         }
         displayTotals(1, false);
-        if (players[0].pick !== NADA && players[1].pick !== NADA) {
-            console.log("Both picked, now determine....");
+        if (players[0].pick !== NADA && players[1].pick !== NADA) {  // both players have chosen
+            // console.log("Both picked, now determine....");
             determineWin();
         }
     }
-
 }, function (errorObject) {
     console.log("The read failed: " + errorObject.code);
 });
@@ -79,7 +77,7 @@ turnDB.on("value", function (snapshot) {
 
     if (turn === 0) {
         putTopMsg2("Waiting for another player to join.");
-    } else if (turn === 1) {
+    } else if (turn === 1) {  // both players have chosen
         putTopMsg2("Make your choice.");
     }
 
@@ -93,17 +91,14 @@ chatDB.on("value", function (snapshot) {
         emptyChatDiv();
         return;
     }
-    console.log("chatdb: " + data);
+    // console.log("chatdb: " + data);
     chats = data;
     emptyChatDiv();
 
     for (var i = 0; i < chats.length; i++) {
         var chat = chats[i];
-        var msgp = $("<p class='chatP'>").text(chat);
-        // console.log(msgp);
         $("#chatDiv").append(chat + "\n");
     }
-
 }, function (errorObject) {
     console.log("The read failed: " + errorObject.code);
 });
@@ -129,12 +124,11 @@ function determineWin() {
     displayRPSPick(0, p0);
     displayRPSPick(1, p1);
 
-
     setTimeout(startOver, 4000);
 }
 
 function startOver() {
-    console.log("Start over, refresh....");
+    // console.log("Start over, refresh....");
     var uid = getUser();
     players[0].pick = NADA;
     players[1].pick = NADA;
@@ -190,21 +184,20 @@ function getUser() {  // player 1 is 0, player 2 is 1, anything else will return
     return uid;
 }
 
-function setUser(userId) {
+function setUser(userId) {  // put the user in sessionStorage
     storageType.setItem(storageKey, userId);
 }
 
 $(document).on("click touchstart", ".rps", pickRPS);
 
-$("#playerNameButton").on("click", function () {
+$("#playerNameButton").on("click", function () {  // Adding a new player
     event.preventDefault();
     var playerName = $("#playerNameText").val().trim();
 
     setupPlayer(playerName);
-
 });
 
-$("#chatButton").on("click", function () {
+$("#chatButton").on("click", function () {  // Adding a new chat
     event.preventDefault();
     var chatText = $("#chatText");
     var chatMsg = chatText.val().trim();
@@ -218,7 +211,7 @@ $("#chatButton").on("click", function () {
     chatText.val("");
 });
 
-function pickRPS() {
+function pickRPS() {  // user making their pick
     var text = $(this).text();
     var uid = getUser();
 
@@ -231,7 +224,7 @@ function pickRPS() {
     playerDB.set(players);
 }
 
-function setupPlayer(name) {
+function setupPlayer(name) {  // Create the new player into the game
     if (players !== null && players.length === 2) {
         return; // we already have both players in the list
     }
@@ -241,7 +234,6 @@ function setupPlayer(name) {
         losses: 0,
         pick: NADA
     };
-
 
     if (players === null || players.length === 0) {
         setUser(0);
@@ -256,11 +248,10 @@ function setupPlayer(name) {
     }
 
     players.push(player);
-
     playerDB.set(players);
 }
 
-window.onunload = function () {
+window.onunload = function () {  // When somebody closes out their browser or reloads - doesn't work on mobile
     if (players !== null) {
         var uid = getUser();
         if (uid === -1) uid = 1;
@@ -275,13 +266,13 @@ window.onunload = function () {
         playerDB.set(players);
     }
 
-
     emptyChatDiv();
     chats = [];
     chatDB.set(chats);
     storageType.removeItem(storageKey);
 };
 
+// Here on down is for screen manipulations
 function emptyTopInput() {
     $("#topPanel").empty();
 }
@@ -371,7 +362,6 @@ function emptyNameInBox(i) {
     var boxId = "#pNameBox" + i;
     $(boxId).empty();
 }
-
 
 function displayTotals(id, justEmptyIt) {
     var divstr = "#totalsBox" + id;
